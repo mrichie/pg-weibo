@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.qingyue.phonegap-weibo"
+    version="0.1.0">
+
+    <name>Phonegap weibo plugin</name>
+        <description>Phonegap weibo plugin</description>
+        <license>Apache 2.0</license>
+        <keywords>Phonegap weibo</keywords>
+        <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <js-module src="www/weibo.js" name="weibo">
+      <merges target="navigator.weibo" />
+    </js-module>
+
+
+  <!-- ios -->
+  <platform name="ios">
+    <config-file target="config.xml" parent="/*">
+      <feature name="QyWeibo">
+        <param name="ios-package" value="QyWeibo"/>
+      </feature>
+    </config-file>
+
+    <source-file src="src/ios/libWeiboSDK.a" framework="true" />
+    <header-file src="src/ios/WeiboSDK.h" />
+    <header-file src="src/ios/QyWeibo.h" />
+    <source-file src="src/ios/QyWeibo.m" />
+    <asset src="src/qy_weibo.js" target ="qy_weibo.js"/>
+  </platform>
+
+   <!-- android -->
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="QyWeibo">
+                <param name="android-package" value="org.qingyue.weibo.QyWeibo"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/org/qingyue/weibo/QyWeibo.java" target-dir="src/org/qingyue/weibo" />
+
+        <source-file src="src/android/libs/weibosdkcore.jar" target-dir="libs" />
+    </platform>
+</plugin>

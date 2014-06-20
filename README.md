@@ -1,4 +1,4 @@
-pg-weibo
+PhoneGap-weibo
 ========
 
 Weibo Plugin for Phonegap
