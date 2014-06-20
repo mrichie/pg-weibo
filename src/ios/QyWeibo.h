@@ -15,8 +15,8 @@
 
 @property (nonatomic, strong) CDVInvokedUrlCommand *pendingLoginCommand;
 
-@property NSString appKey;
-@property NSString appSecret;
-@property NSString redirectURI;
+@property NSString* appKey;
+@property NSString* appSecret;
+@property NSString* redirectURI;
 
 @end

@@ -45,24 +45,16 @@
 
 - (void)login:(CDVInvokedUrlCommand* )command
 {
-    CDVPluginResult *result;
 
-    NSString *scope;
-    if ([command.arguments count] > 1)
-    {
-        scope = [command.arguments objectAtIndex:1];
-    }
-    else
-    {
+    NSString *scope = [self parseStringFromJS:command.arguments keyFromJS:@"scope"];
+    if (scope == NULL){
         scope = @"all";
     }
-
     // send request
     WBAuthorizeRequest *request = [WBAuthorizeRequest request];
     request.redirectURI = self.redirectURI;
     request.scope = scope;
     [WeiboSDK sendRequest:request];
-
     self.pendingLoginCommand = command;
 }
 
@@ -132,7 +124,7 @@
 
 - (BOOL)existCommandArguments:(NSArray*)comArguments{
     NSMutableArray *commandArguments=[[NSMutableArray alloc] initWithArray:comArguments];
-    if (commandArguments.count > 0) {
+    if (commandArguments && commandArguments.count > 0) {
         return TRUE;
     }else{
         return FALSE;
@@ -140,8 +132,12 @@
 }
 
 - (NSString*)parseStringFromJS:(NSArray*)commandArguments keyFromJS:(NSString*)key{
-    NSString *string = [NSString stringWithFormat:@"%@",[[commandArguments objectAtIndex:0] valueForKey:key]];
-    return string;
+    if([self existCommandArguments:commandArguments]){
+        NSString *string = [NSString stringWithFormat:@"%@",[[commandArguments objectAtIndex:0] valueForKey:key]];
+        return string;
+    }else{
+        return NULL;
+    }
 }
 
 

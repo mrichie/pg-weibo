@@ -23,7 +23,7 @@ var platform = require('cordova/platform');
  */
 var weibo = {
 
-    init : function(callback, errorFunc, appKey, appSecret, redirectUrl){
+    init : function(callback, errorFunc, appKey, appSecret, redirectURI){
         cordova.exec(callback, errorFunc, "QyWeibo", "init",
                      [{"appKey": appKey,
                        "appSecret": appSecret,
@@ -31,7 +31,7 @@ var weibo = {
     },
 
     login : function(callback, errorFunc){
-        cordova.exec(callback, errorFunc, "QyWeibo", "login");
+        cordova.exec(callback, errorFunc, "QyWeibo", "login", []);
     }
 };
 module.exports = weibo;
