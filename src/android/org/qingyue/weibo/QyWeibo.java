@@ -1,26 +1,36 @@
-package com.qingyue.weibo.QyWeibo;
+package org.qingyue.weibo;
 
-import org.apache.cordova.api.Plugin;
-import org.apache.cordova.api.PluginResult;
-
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaWebView;
+import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.weibo.net.DialogError;
-import com.weibo.net.Weibo;
-import com.weibo.net.WeiboDialogListener;
-import com.weibo.net.WeiboException;
+import com.sina.weibo.sdk.auth.Oauth2AccessToken;
+import com.sina.weibo.sdk.auth.WeiboAuth;
+import com.sina.weibo.sdk.auth.WeiboAuthListener;
+import com.sina.weibo.sdk.auth.sso.SsoHandler;
+import com.sina.weibo.sdk.exception.WeiboException;
 
-public class QyWeibo extends Plugin {
+public class QyWeibo extends CordovaPlugin {
 
     private static final String TAG = QyWeibo.class.getSimpleName();
+    
+    private static WeiboAuth mWeiboAuth;
+    
+    private Oauth2AccessToken mAccessToken;
 
-    private String callbackId;
+    private SsoHandler mSsoHandler;
+
+    private CallbackContext callbackContext;
 
     public static JSONObject getObjectFromArray(JSONArray jsonArray,
                                                 int objectIndex) {
@@ -38,64 +48,54 @@ public class QyWeibo extends Plugin {
     public static String getData(JSONArray ary, String key) {
         String result = null;
         try {
-            result = getObjectFromArray(ary).getString(key);
+            result = getObjectFromArray(ary, 0).getString(key);
         } catch (JSONException e) {
 
         }
         return result;
     }
 
-    @Override
-    public PluginResult execute(String action, final JSONArray args,
-                                final String callbackId) {
-        final PluginResult pr = new PluginResult(PluginResult.Status.NO_RESULT);
-        pr.setKeepCallback(true);
-        Log.d(TAG, "action: " + action);
-
-        if (action.equals("init")) {
-
-            this.callbackId = callbackId;
-            Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        final Weibo weibo = Weibo.getInstance();
-                        try {
-                            String appId = getData(args, 'appKey');
-                            String appSecret = getData(args, 'appSecret');
-                            String redirectURI = getData(args, 'redirectURI')
-                            weibo.setupConsumerConfig(appId, appSecret);
-                            weibo.setRedirectUrl(redirectURI);
-
-                            QyWeibo.this.success("success",
-                                                     QyWeibo.this.callbackId);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            QyWeibo.this.error("error",
-                                                   QyWeibo.this.callbackId);
-                        }
-                    }
-                };
-            this.cordova.getActivity().runOnUiThread(runnable);
-
-        } else if (action.equals("login")) {
-            final Weibo weibo = Weibo.getInstance();
-            this.callbackId = callbackId;
-
-            Runnable runnable = new Runnable() {
-                    public void run() {
-                        weibo.authorize(
-                                        (Activity) QyWeibo.this.cordova.getActivity(),
-                                        new AuthDialogListener(QyWeibo.this));
-                    };
-                };
-            this.cordova.getActivity().runOnUiThread(runnable);
-
+    public void init(JSONArray json, CallbackContext cbContext){
+    	callbackContext = cbContext;
+    	String appId = getData(json, "app_key");
+        String appSecret = getData(json, "appSecret");
+        String redirectURI = getData(json, "redirectURI");
+        try{
+        	mWeiboAuth = new WeiboAuth(null, appId, appSecret, redirectURI);
+         
+        	PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
+        	pluginResult.setKeepCallback(true);
+        	callbackContext.sendPluginResult(pluginResult);
         }
-
-        return pr;
+        catch(Exception e){
+        	e.printStackTrace();
+        	PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR);
+            pluginResult.setKeepCallback(true);
+            callbackContext.sendPluginResult(pluginResult);
+        }
     }
-
-    class AuthDialogListener implements WeiboDialogListener {
+    
+    public void login(JSONArray json, CallbackContext callbackContext){
+    	Runnable runnable = new Runnable() {
+            public void run() {
+            	mSsoHandler = new SsoHandler((Activity) QyWeibo.this.cordova.getActivity(), mWeiboAuth);
+            	mSsoHandler.authorize(new AuthDialogListener(QyWeibo.this));
+            	
+            };
+        };
+        this.cordova.getActivity().runOnUiThread(runnable);
+    	
+    }
+    
+    @Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (mSsoHandler != null) {
+            mSsoHandler.authorizeCallBack(requestCode, resultCode, data);
+        }
+    }
+    
+    class AuthDialogListener implements WeiboAuthListener {
         final QyWeibo fba;
 
         public AuthDialogListener(QyWeibo fba) {
@@ -103,11 +103,19 @@ public class QyWeibo extends Plugin {
             this.fba = fba;
         }
 
-        @Override
         public void onComplete(Bundle values) {
-            String token = values.getString("access_token");
-            String expires_in = values.getString("expires_in");
-            // Log.d(TAG, "token: " + token + ", expires_in: " + expires_in);
+        	mAccessToken = Oauth2AccessToken.parseAccessToken(values);
+        	if (mAccessToken.isSessionValid()) {
+                // save Token to SharedPreferences
+                //AccessTokenKeeper.writeAccessToken(QyWeibo.this, mAccessToken);
+            } else {
+                String code = values.getString("code");
+                Log.d(TAG, "code : " + code);
+            }
+        	
+            String token = mAccessToken.getToken();
+            String expires_in = Long.toString((mAccessToken.getExpiresTime()));
+            Log.d(TAG, "token: " + token + ", expires_in: " + expires_in);
             String json = "{\"access_token\": \"" + token
                 + "\", \"expires_in\": \"" + expires_in + "\"}";
             JSONObject jo = null;
@@ -117,24 +125,19 @@ public class QyWeibo extends Plugin {
                 e.printStackTrace();
             }
 
-            this.fba.success(jo, this.fba.callbackId);
-        }
-
-        @Override
-        public void onError(DialogError e) {
-            this.fba.error("Error: " + e.getMessage(), this.fba.callbackId);
+            this.fba.callbackContext.success(jo);
         }
 
         @Override
         public void onCancel() {
-            this.fba.error("Cancelled", this.fba.callbackId);
+            this.fba.callbackContext.error("Cancelled");
         }
 
         @Override
         public void onWeiboException(WeiboException e) {
-            this.fba.error("Weibo error: " + e.getMessage(),
-                           this.fba.callbackId);
+            this.fba.callbackContext.error("Weibo error: " + e.getMessage());
         }
+
     }
 
 }
