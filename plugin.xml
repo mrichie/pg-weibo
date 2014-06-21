@@ -29,7 +29,6 @@
     <header-file src="src/ios/WeiboSDK.h" />
     <header-file src="src/ios/QyWeibo.h" />
     <source-file src="src/ios/QyWeibo.m" />
-    <asset src="src/qy_weibo.js" target ="qy_weibo.js"/>
   </platform>
 
    <!-- android -->
