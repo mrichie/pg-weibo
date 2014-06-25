@@ -72,16 +72,23 @@
     else if ([response isKindOfClass:[WBAuthorizeResponse class]])
     {
         WBAuthorizeResponse *authResponse = (WBAuthorizeResponse *)response;
-        [self saveToken:authResponse];
+        if([authResponse.userInfo valueForKey:@"error"]){
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authResponse.userInfo valueForKey:@"error"]];
 
-        // send back
-        CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:authResponse.accessToken];
+            [self.commandDelegate sendPluginResult:result
+                                        callbackId:self.pendingLoginCommand.callbackId];
+        }else{
+            [self saveToken:authResponse];
+            // send back
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:authResponse.accessToken];
 
-        [self.commandDelegate sendPluginResult:result
-                                    callbackId:self.pendingLoginCommand.callbackId];
+            [self.commandDelegate sendPluginResult:result
+                                        callbackId:self.pendingLoginCommand.callbackId];
 
-        // clean up
-        self.pendingLoginCommand = nil;
+            // clean up
+            self.pendingLoginCommand = nil;
+        }
+
     }
 }
 
