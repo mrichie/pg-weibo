@@ -32,7 +32,12 @@ var weibo = {
 
     login : function(callback, errorFunc){
         cordova.exec(callback, errorFunc, "QyWeibo", "login", []);
+    },
+
+    getUserInfo : function(callback, errorFunc){
+        cordova.exec(callback, errorFunc, "QyWeibo", "getUserInfo", []);
     }
+
 };
 module.exports = weibo;
 

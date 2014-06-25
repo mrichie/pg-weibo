@@ -55,7 +55,21 @@
     request.redirectURI = self.redirectURI;
     request.scope = scope;
     [WeiboSDK sendRequest:request];
-    self.pendingLoginCommand = command;
+    self.pendingCommand = command;
+}
+
+- (void)getUserInfo:(CDVInvokedUrlCommand*) command{
+    NSDictionary *token = [self loadToken];
+    NSString *access_token = [token valueForKey:@"accessToken"];
+    NSDictionary *params = @{
+                            @"uid": [token valueForKey:@"userID"]
+                            };
+    
+    NSString * userInfoUrl = @"https://api.weibo.com/2/users/show.json";
+    
+    [WBHttpRequest requestWithAccessToken:access_token url:userInfoUrl httpMethod:@"GET" params:params delegate:self withTag:@"userInfo"];
+
+    self.pendingCommand = command;
 }
 
 - (void)didReceiveWeiboRequest:(WBBaseRequest *)request
@@ -72,24 +86,49 @@
     else if ([response isKindOfClass:[WBAuthorizeResponse class]])
     {
         WBAuthorizeResponse *authResponse = (WBAuthorizeResponse *)response;
+        NSLog(@"%@", authResponse.userInfo);
         if([authResponse.userInfo valueForKey:@"error"]){
             CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authResponse.userInfo valueForKey:@"error"]];
-
+            
             [self.commandDelegate sendPluginResult:result
-                                        callbackId:self.pendingLoginCommand.callbackId];
+                                        callbackId:self.pendingCommand.callbackId];
         }else{
             [self saveToken:authResponse];
+            
+            NSDictionary *dict = @{
+                                   @"access_token": authResponse.accessToken,
+                                   @"expires_in": authResponse.expirationDate.description
+                                   };
             // send back
-            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:authResponse.accessToken];
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
 
             [self.commandDelegate sendPluginResult:result
-                                        callbackId:self.pendingLoginCommand.callbackId];
+                                    callbackId:self.pendingCommand.callbackId];
 
             // clean up
-            self.pendingLoginCommand = nil;
+            self.pendingCommand = nil;
         }
-
     }
+    
+}
+
+- (void)request:(WBHttpRequest *)request didFinishLoadingWithDataResult:(NSData *)data
+{
+    NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data
+                                                         options:NSJSONReadingMutableLeaves
+                                                           error:nil];
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
+    
+    [self.commandDelegate sendPluginResult:result
+                                callbackId:self.pendingCommand.callbackId];
+    
+}
+
+- (void)request:(WBHttpRequest *)request didFailWithError:(NSError *)error{
+    CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+    
+    [self.commandDelegate sendPluginResult:result
+                                callbackId:self.pendingCommand.callbackId];
 }
 
 - (NSDictionary *)loadToken

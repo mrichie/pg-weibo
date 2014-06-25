@@ -25,8 +25,8 @@ Weibo Plugin for Phonegap
 In your phonegap project, add following code binding to your weibo login button
 ```
 navigator.weibo.init(function(response) {
-  navigator.weibo.login(function(access_token, expires_in) {
-    console.log(access_token);
+  navigator.weibo.login(function(token) {
+    console.log(token);
   }, function(msg) {
     console.log("login error : " + msg);
   });
