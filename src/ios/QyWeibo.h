@@ -13,6 +13,7 @@
 - (void)init: (CDVInvokedUrlCommand* )command;
 - (void)login: (CDVInvokedUrlCommand* )command;
 - (void)getUserInfo: (CDVInvokedUrlCommand* )command;
+- (void)shareMessage: (CDVInvokedUrlCommand* )command;
 
 @property (nonatomic, strong) CDVInvokedUrlCommand *pendingCommand;
 

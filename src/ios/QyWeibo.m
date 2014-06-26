@@ -47,7 +47,7 @@
 {
 
     NSString *scope = [self parseStringFromJS:command.arguments keyFromJS:@"scope"];
-    if (scope == NULL){
+    if ([scope length] > 0){
         scope = @"all";
     }
     // send request
@@ -64,12 +64,29 @@
     NSDictionary *params = @{
                             @"uid": [token valueForKey:@"userID"]
                             };
-    
+
     NSString * userInfoUrl = @"https://api.weibo.com/2/users/show.json";
-    
+
     [WBHttpRequest requestWithAccessToken:access_token url:userInfoUrl httpMethod:@"GET" params:params delegate:self withTag:@"userInfo"];
 
     self.pendingCommand = command;
+}
+
+- (void)shareMessage:(CDVInvokedUrlCommand*) command{
+    NSString *text = [self parseStringFromJS:command.arguments keyFromJS:@"text"];
+    NSString *image = [self parseStringFromJS:command.arguments keyFromJS:@"image"];
+    WBMessageObject *message = [WBMessageObject message];
+    if([text length] > 0){
+        message.text = text;
+    }
+    if([image length] > 0){
+        WBImageObject *image = [WBImageObject object];
+        image.imageData = [NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:image ofType:@"jpg"]];
+        message.imageObject = image;
+    }
+
+    WBSendMessageToWeiboRequest *request = [WBSendMessageToWeiboRequest requestWithMessage:message];
+    [WeiboSDK sendRequest:request];
 }
 
 - (void)didReceiveWeiboRequest:(WBBaseRequest *)request
@@ -89,12 +106,12 @@
         NSLog(@"%@", authResponse.userInfo);
         if([authResponse.userInfo valueForKey:@"error"]){
             CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authResponse.userInfo valueForKey:@"error"]];
-            
+
             [self.commandDelegate sendPluginResult:result
                                         callbackId:self.pendingCommand.callbackId];
         }else{
             [self saveToken:authResponse];
-            
+
             NSDictionary *dict = @{
                                    @"access_token": authResponse.accessToken,
                                    @"expires_in": authResponse.expirationDate.description
@@ -109,7 +126,7 @@
             self.pendingCommand = nil;
         }
     }
-    
+
 }
 
 - (void)request:(WBHttpRequest *)request didFinishLoadingWithDataResult:(NSData *)data
@@ -118,15 +135,15 @@
                                                          options:NSJSONReadingMutableLeaves
                                                            error:nil];
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
-    
+
     [self.commandDelegate sendPluginResult:result
                                 callbackId:self.pendingCommand.callbackId];
-    
+
 }
 
 - (void)request:(WBHttpRequest *)request didFailWithError:(NSError *)error{
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-    
+
     [self.commandDelegate sendPluginResult:result
                                 callbackId:self.pendingCommand.callbackId];
 }
@@ -179,10 +196,14 @@
 
 - (NSString*)parseStringFromJS:(NSArray*)commandArguments keyFromJS:(NSString*)key{
     if([self existCommandArguments:commandArguments]){
-        NSString *string = [NSString stringWithFormat:@"%@",[[commandArguments objectAtIndex:0] valueForKey:key]];
-        return string;
+        NSString *value = [[commandArguments objectAtIndex:0] valueForKey:key];
+        if(value){
+            return [NSString stringWithFormat:@"%@",value];
+        }else{
+            return @"";
+        }
     }else{
-        return NULL;
+        return @"";
     }
 }
 

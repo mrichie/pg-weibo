@@ -36,6 +36,15 @@ var weibo = {
 
     getUserInfo : function(callback, errorFunc){
         cordova.exec(callback, errorFunc, "QyWeibo", "getUserInfo", []);
+    },
+
+    shareMessage: function(callback, errorFunc, text, image){
+        cordova.exec(callback, errorFunc, "QyWeibo", "shareMessage", [
+            {
+                "text": text,
+                "image": image
+            }
+        ]);
     }
 
 };
