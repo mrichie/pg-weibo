@@ -74,19 +74,28 @@
 
 - (void)shareMessage:(CDVInvokedUrlCommand*) command{
     NSString *text = [self parseStringFromJS:command.arguments keyFromJS:@"text"];
-    NSString *image = [self parseStringFromJS:command.arguments keyFromJS:@"image"];
+    NSString *image_path = [self parseStringFromJS:command.arguments keyFromJS:@"image"];
     WBMessageObject *message = [WBMessageObject message];
+
     if([text length] > 0){
         message.text = text;
     }
-    if([image length] > 0){
-        WBImageObject *image = [WBImageObject object];
-        image.imageData = [NSData dataWithContentsOfFile:[[NSBundle mainBundle] pathForResource:image ofType:@"jpg"]];
-        message.imageObject = image;
+    if([image_path length] > 0){
+        WBImageObject *wbimage = [WBImageObject object];
+        NSData *image;
+        if([image_path hasPrefix:@"http://"]){
+            image = [NSData dataWithContentsOfURL: [NSURL URLWithString:image_path]];
+        }else{
+            image = [NSData dataWithContentsOfFile: image_path];
+        }
+        wbimage.imageData = image;
+        message.imageObject = wbimage;
     }
-
     WBSendMessageToWeiboRequest *request = [WBSendMessageToWeiboRequest requestWithMessage:message];
+    [WeiboSDK enableDebugMode:YES];
     [WeiboSDK sendRequest:request];
+    
+    self.pendingCommand = command;
 }
 
 - (void)didReceiveWeiboRequest:(WBBaseRequest *)request
@@ -96,6 +105,7 @@
 
 - (void)didReceiveWeiboResponse:(WBBaseResponse *)response
 {
+    NSLog(@"response : %@", response);
     if ([response isKindOfClass:[WBSendMessageToWeiboResponse class]])
     {
         NSLog(@"Return from send message: %d", response.statusCode);
@@ -142,6 +152,7 @@
 }
 
 - (void)request:(WBHttpRequest *)request didFailWithError:(NSError *)error{
+    NSLog(@"error : %@", error);
     CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
 
     [self.commandDelegate sendPluginResult:result
