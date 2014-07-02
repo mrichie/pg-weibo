@@ -31,6 +31,6 @@ navigator.weibo.init(function(response) {
     console.log("login error : " + msg);
   });
 }, function(response) {
-}, APP_ID, APP_SECRET, "https://api.weibo.com/oauth2/default.html");
+}, APP_ID, "https://api.weibo.com/oauth2/default.html");
 
 ```
