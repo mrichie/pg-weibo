@@ -1,4 +1,4 @@
-cordova.define("org.qingyue.phonegap-weibo.weibo", function(require, exports, module) { /*
+/*
  Copyright 2013-2014, QingYue Technology
 
  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,12 +23,11 @@ var platform = require('cordova/platform');
  */
 var weibo = {
 
-    init : function(callback, errorFunc, appKey, redirectURI, scope){
+    init : function(callback, errorFunc, appKey, appSecret, redirectURI){
         cordova.exec(callback, errorFunc, "QyWeibo", "init",
                      [{"appKey": appKey,
-                       	"redirectURI": redirectURI,
-			"scope": scope
-			}]);
+                       "appSecret": appSecret,
+                       "redirectURI": redirectURI}]);
     },
 
     login : function(callback, errorFunc){
@@ -39,17 +38,9 @@ var weibo = {
         cordova.exec(callback, errorFunc, "QyWeibo", "getUserInfo", []);
     },
 
-    shareMessage: function(callback, errorFunc, text, image){
-        cordova.exec(callback, errorFunc, "QyWeibo", "shareMessage", [
-            {
-                "text": text,
-                "image": image
-            }
-        ]);
+    shareMessage: function(arg, callback, errorFunc){
+	 cordova.exec(callback, errorFunc, "QyWeibo", "shareMessage", [arg]);
     }
 
 };
 module.exports = weibo;
-
-
-});
