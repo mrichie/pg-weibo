@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    id="org.qingyue.phonegap-weibo"
-    version="0.1.0">
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	id="org.qingyue.phonegap-weibo"
+	version="0.2.0">
 
-    <name>Phonegap weibo plugin</name>
-        <description>Phonegap weibo plugin</description>
-        <license>Apache 2.0</license>
-        <keywords>Phonegap weibo</keywords>
-        <engines>
-        <engine name="cordova" version=">=3.0.0" />
-    </engines>
+  <name>Phonegap weibo plugin</name>
+  <description>Phonegap weibo plugin</description>
+  <license>Apache 2.0</license>
+  <keywords>Phonegap weibo</keywords>
+  <engines>
+    <engine name="cordova" version=">=3.0.0" />
+  </engines>
 
-    <js-module src="www/weibo.js" name="weibo">
-      <merges target="navigator.weibo" />
-    </js-module>
-
+  <js-module src="www/weibo.js" name="weibo">
+    <merges target="navigator.weibo" />
+  </js-module>
 
   <!-- ios -->
   <platform name="ios">
@@ -29,18 +28,27 @@
     <header-file src="src/ios/WeiboSDK.h" />
     <header-file src="src/ios/QyWeibo.h" />
     <source-file src="src/ios/QyWeibo.m" />
+    <source-file src="src/ios/WeiboSDK.bundle/others/mfp.cer" />
+    <header-file src="src/ios/WBHttpRequest.h" />
+    <header-file src="src/ios/WBHttpRequest+WeiboUser.h" />
+    <header-file src="src/ios/WBHttpRequest+WeiboShare.h" />
+    <header-file src="src/ios/WBHttpRequest+WeiboToken.h" />
+    <header-file src="src/ios/WBSDKBasicButton.h" />
+    <header-file src="src/ios/WBSDKCommentButton.h" />
+    <header-file src="src/ios/WBSDKRelationshipButton.h" />
+    <header-file src="src/ios/WeiboUser.h" />
   </platform>
 
-   <!-- android -->
-    <platform name="android">
-        <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="QyWeibo">
-                <param name="android-package" value="org.qingyue.weibo.QyWeibo"/>
-            </feature>
-        </config-file>
+  <!-- android -->
+  <platform name="android">
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="QyWeibo">
+        <param name="android-package" value="org.qingyue.weibo.QyWeibo"/>
+      </feature>
+    </config-file>
 
-        <source-file src="src/android/org/qingyue/weibo/QyWeibo.java" target-dir="src/org/qingyue/weibo" />
+    <source-file src="src/android/org/qingyue/weibo/QyWeibo.java" target-dir="src/org/qingyue/weibo" />
 
-        <source-file src="src/android/libs/weibosdkcore.jar" target-dir="libs" />
-    </platform>
+    <source-file src="src/android/libs/weibosdkcore.jar" target-dir="libs" />
+  </platform>
 </plugin>
